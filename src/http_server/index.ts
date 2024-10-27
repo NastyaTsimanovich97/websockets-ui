@@ -129,5 +129,11 @@ wss.on("connection", function connection(ws) {
 
   ws.on("close", function () {
     console.log("WS server is closed");
+
+    const winner = room?.roomUsers.find((user) => user.index !== player.index);
+
+    if (!winner) return null;
+
+    room?.game.finishGame(winner.index);
   });
 });

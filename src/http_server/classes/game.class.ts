@@ -10,7 +10,7 @@ export default class Game {
   public players: { [key: string]: Player } = {};
   public currentIndexPlayer: string;
 
-  public board: Map<string, Board> = new Map();
+  public board: { [key: string]: Board } = {};
 
   private readonly _size = 10;
 
@@ -21,7 +21,7 @@ export default class Game {
 
     Object.values(players).forEach((player) => {
       const gameBoard = this._createBoard(player.ships ?? []);
-      this.board.set(player.index, gameBoard);
+      this.board[player.index] = gameBoard;
     });
 
     return this;
@@ -60,9 +60,10 @@ export default class Game {
       return null;
     }
 
-    const enemyBoard = this.board.get(enemyPlayer.index) as any;
+    const enemyBoard = this.board[enemyPlayer.index] as any;
 
     const field = enemyBoard[x][y] as IField;
+    console.log("field", field);
 
     let status;
 
@@ -71,13 +72,27 @@ export default class Game {
       const ship = field.ship;
 
       if (ship) {
-        ship.woundedFields += 1;
+        const woundedFields = ship.woundedFields + 1;
+        let isKilled = false;
 
-        if (ship.woundedFields === ship.length) {
+        if (woundedFields === ship.length) {
           status = EFieldStatus.Killed;
+          isKilled = true;
           // mark fields around ship
+
           // check win and finish game
+          if (this._checkWin(enemyBoard)) {
+            this.finishGame(this.currentIndexPlayer);
+          }
         }
+
+        enemyBoard[x][y] = {
+          ...field,
+          status,
+          ship: { ...ship, isKilled, woundedFields },
+        };
+        this.board[enemyPlayer.index] = { ...enemyBoard };
+        // console.log(this.board[enemyPlayer.index]?.[x]?.[y]);
       }
     } else {
       enemyBoard[x][y] = {
@@ -121,7 +136,7 @@ export default class Game {
       return null;
     }
 
-    const enemyBoard = this.board.get(enemyPlayer.index) as any;
+    const enemyBoard = this.board[enemyPlayer.index] as any;
 
     const availableFields = [];
     for (let x = 0; x < this._size; x++) {
@@ -144,6 +159,51 @@ export default class Game {
     }
   }
 
+  public finishGame(playerIndexId: string) {
+    console.log(`Game is finished. Winner is ${playerIndexId}`);
+
+    const winPlayer = this.players[playerIndexId];
+
+    if (!winPlayer) return null;
+
+    winPlayer.wins += 1;
+
+    Object.values(this.players).forEach((player) => {
+      player.ships = [];
+      player.isReady = false;
+      player.ws.send(
+        JSON.stringify({
+          id: 0,
+          type: Commands.Finish,
+          data: JSON.stringify({
+            winPlayer: playerIndexId,
+          }),
+        })
+      );
+    });
+
+    this._updateWinners();
+  }
+
+  private _updateWinners() {
+    const winnersData = [...Object.values(this.players)]
+      .map((player) => ({
+        name: player.name,
+        wins: player.wins,
+      }))
+      .sort((a, b) => b.wins - a.wins);
+
+    Object.values(this.players).forEach((player) => {
+      player.ws.send(
+        JSON.stringify({
+          id: 0,
+          type: Commands.UpdateWinners,
+          data: JSON.stringify(winnersData),
+        })
+      );
+    });
+  }
+
   private _createBoard(ships: IShip[]) {
     const newBoard: Board = Array.from({ length: this._size }, () =>
       Array.from({ length: this._size }, () => ({
@@ -164,12 +224,20 @@ export default class Game {
           (newBoard[x] as any)[y] = {
             ...(newBoard[x]?.[y] as any),
             isEmpty: false,
-            ship,
+            ship: {
+              ...ship,
+              woundedFields: 0,
+            },
           };
         }
       }
     });
 
     return newBoard;
+  }
+
+  private _checkWin(board: Board) {
+    console.log(JSON.stringify(board));
+    return board.every((row) => row.every((field) => !!field.ship?.isKilled));
   }
 }

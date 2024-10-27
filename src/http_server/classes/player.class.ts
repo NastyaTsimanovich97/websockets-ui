@@ -12,6 +12,7 @@ export default class Player {
 
   public ships: IShip[] = [];
   public isReady = false;
+  public wins = 0;
 
   public ws: WebSocket;
 

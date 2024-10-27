@@ -11,4 +11,5 @@ export interface IShip {
   length: number;
   type: EShipType;
   woundedFields: number;
+  isKilled: boolean;
 }

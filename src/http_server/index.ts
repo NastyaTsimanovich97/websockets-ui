@@ -105,11 +105,27 @@ wss.on("connection", function connection(ws) {
 
       ws.send(JSON.stringify(res));
     }
+
+    if (type === Commands.AddShips) {
+      const commandData = JSON.parse(data);
+      room?.addShips(
+        commandData.gameId,
+        commandData.indexPlayer,
+        commandData.ships,
+        gameStore
+      );
+    }
+
+    if (type === Commands.Attack) {
+      const { x, y, indexPlayer } = JSON.parse(data);
+      room?.game.attack(x, y, indexPlayer);
+    }
+
+    if (type === Commands.RandomAttack) {
+    }
   });
 
   ws.on("close", function () {
     console.log("WS server is closed");
   });
-
-  //   ws.send(JSON.stringify(`Connected in 3000 port`));
 });

@@ -1,4 +1,4 @@
-export interface CreatePlayerI {
+export interface ICreatePlayer {
   name: string;
   password: string;
 }

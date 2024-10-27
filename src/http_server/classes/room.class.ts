@@ -1,5 +1,8 @@
 import { v4 as uuidv4 } from "uuid";
 import { Commands } from "../constants/commands";
+import { IShip } from "../interfaces/ship.interface";
+import Game from "./game.class";
+import GameStore from "./gameStore.class";
 import Player from "./player.class";
 
 export default class Room {
@@ -10,6 +13,8 @@ export default class Room {
   }[] = [];
   public players: { [key: string]: Player } = {};
   public isAvailable: boolean = true;
+
+  public game: Game;
 
   public create() {
     this.indexRoom = uuidv4();
@@ -27,6 +32,32 @@ export default class Room {
     }
   }
 
+  public addShips(
+    gameId: string,
+    playerId: string,
+    ships: IShip[],
+    gameStore: GameStore
+  ) {
+    const player = this.players[playerId];
+
+    if (!player) {
+      console.error("Player not found");
+      return null;
+    }
+
+    player.ships = ships;
+    player.isReady = true;
+
+    const isGameReady = Object.values(this.players).every((p) => p.isReady);
+
+    console.log("isGameReady", isGameReady);
+
+    if (isGameReady) {
+      this._startGame(gameId, gameStore);
+    }
+  }
+
+  // TODO: move this method
   private _createGame() {
     const idGame = uuidv4();
     for (const player of Object.values(this.players)) {
@@ -41,5 +72,31 @@ export default class Room {
         })
       );
     }
+  }
+
+  private _startGame(gameId: string, gameStore: GameStore) {
+    console.log("Start game");
+
+    const newGame = new Game();
+
+    this.game = newGame.create(gameId, this.players);
+
+    gameStore.create(gameId, this.game);
+
+    for (const player of Object.values(this.players)) {
+      console.log(`Start game for player ${player.index}`);
+      player.ws.send(
+        JSON.stringify({
+          type: Commands.StartGame,
+          id: 0,
+          data: JSON.stringify({
+            currentPlayerIndex: player.index,
+            ships: player.ships,
+          }),
+        })
+      );
+    }
+
+    this.game.turnPlayer();
   }
 }

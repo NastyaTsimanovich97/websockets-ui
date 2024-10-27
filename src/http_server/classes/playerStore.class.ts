@@ -1,11 +1,11 @@
 import { WebSocket } from "ws";
-import { CreatePlayerI } from "../interfaces/player.interface";
+import { ICreatePlayer } from "../interfaces/player.interface";
 import Player from "./player.class";
 
 export default class PlayerStore {
   private _playerStore: { [key: string]: Player } = {};
 
-  public register(data: CreatePlayerI, ws: WebSocket) {
+  public register(data: ICreatePlayer, ws: WebSocket) {
     const player = new Player();
     const newPlayer = player.create(data, ws);
 

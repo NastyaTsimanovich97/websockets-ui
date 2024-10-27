@@ -122,6 +122,8 @@ wss.on("connection", function connection(ws) {
     }
 
     if (type === Commands.RandomAttack) {
+      const { indexPlayer } = JSON.parse(data);
+      room?.game.randomAttack(indexPlayer);
     }
   });
 

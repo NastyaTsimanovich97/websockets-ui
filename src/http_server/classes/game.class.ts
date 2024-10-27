@@ -106,6 +106,44 @@ export default class Game {
     }
   }
 
+  public randomAttack(indexPlayer: string) {
+    if (this.currentIndexPlayer !== indexPlayer) {
+      console.error(`Player turn ${this.currentIndexPlayer}`);
+      return null;
+    }
+
+    const enemyPlayer = Object.values(this.players).find(
+      (player) => player.index !== indexPlayer
+    );
+
+    if (!enemyPlayer?.index) {
+      console.error(`Enemy not found`);
+      return null;
+    }
+
+    const enemyBoard = this.board.get(enemyPlayer.index) as any;
+
+    const availableFields = [];
+    for (let x = 0; x < this._size; x++) {
+      for (let y = 0; y < this._size; y++) {
+        if (enemyBoard[x][y].status === EFieldStatus.Default) {
+          availableFields.push({ x, y });
+        }
+      }
+    }
+
+    if (availableFields.length > 0) {
+      const random = Math.floor(Math.random() * availableFields.length);
+      const { x, y } = availableFields[random] || {};
+
+      if (x && y) {
+        this.attack(x, y, indexPlayer);
+      }
+    } else {
+      console.error("There are not avalibale fields");
+    }
+  }
+
   private _createBoard(ships: IShip[]) {
     const newBoard: Board = Array.from({ length: this._size }, () =>
       Array.from({ length: this._size }, () => ({

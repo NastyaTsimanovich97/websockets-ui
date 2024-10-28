@@ -6,6 +6,7 @@ interface IPosition {
 }
 
 export interface IShip {
+  id: string;
   position: IPosition;
   direction: boolean;
   length: number;

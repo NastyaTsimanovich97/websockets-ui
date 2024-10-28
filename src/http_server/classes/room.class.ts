@@ -45,7 +45,12 @@ export default class Room {
       return null;
     }
 
-    player.ships = ships;
+    player.ships = ships.map((ship) => ({
+      ...ship,
+      id: uuidv4(),
+      isKilled: false,
+      woundedFields: 0,
+    }));
     player.isReady = true;
 
     const isGameReady = Object.values(this.players).every((p) => p.isReady);

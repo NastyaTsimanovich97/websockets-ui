@@ -63,25 +63,28 @@ export default class Game {
     const enemyBoard = this.board[enemyPlayer.index] as any;
 
     const field = enemyBoard[x][y] as IField;
-    console.log("field", field);
 
     let status;
 
     if (!field.isEmpty) {
       status = EFieldStatus.Shot;
-      const ship = field.ship;
+      const fieldShipId = field.ship?.id;
+      const shotShip = enemyPlayer.ships.find(
+        (ship) => ship.id === fieldShipId
+      );
 
-      if (ship) {
-        const woundedFields = ship.woundedFields + 1;
-        let isKilled = false;
+      console.log("Ship is shotted", JSON.stringify(shotShip));
 
-        if (woundedFields === ship.length) {
+      if (shotShip) {
+        shotShip.woundedFields += 1;
+
+        if (shotShip.woundedFields === shotShip.length) {
           status = EFieldStatus.Killed;
-          isKilled = true;
+          shotShip.isKilled = true;
           // mark fields around ship
 
           // check win and finish game
-          if (this._checkWin(enemyBoard)) {
+          if (this._checkWin(enemyPlayer)) {
             this.finishGame(this.currentIndexPlayer);
           }
         }
@@ -89,10 +92,14 @@ export default class Game {
         enemyBoard[x][y] = {
           ...field,
           status,
-          ship: { ...ship, isKilled, woundedFields },
         };
-        this.board[enemyPlayer.index] = { ...enemyBoard };
-        // console.log(this.board[enemyPlayer.index]?.[x]?.[y]);
+        this.board[enemyPlayer.index] = enemyBoard;
+        (this.players[enemyPlayer.index] as any) = {
+          ...enemyPlayer,
+          ships: enemyPlayer.ships.map((ship) =>
+            ship.id === fieldShipId ? shotShip : ship
+          ),
+        };
       }
     } else {
       enemyBoard[x][y] = {
@@ -236,8 +243,7 @@ export default class Game {
     return newBoard;
   }
 
-  private _checkWin(board: Board) {
-    console.log(JSON.stringify(board));
-    return board.every((row) => row.every((field) => !!field.ship?.isKilled));
+  private _checkWin(player: Player): boolean {
+    return player.ships.every((ship) => ship?.isKilled);
   }
 }

@@ -7,7 +7,7 @@ export default class PlayerStore {
 
   public register(data: ICreatePlayer, ws: WebSocket) {
     const player = new Player();
-    const newPlayer = player.create(data, ws);
+    const newPlayer = player.create(data, ws, this._playerStore);
 
     this._save(newPlayer);
 

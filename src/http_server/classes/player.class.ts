@@ -16,12 +16,26 @@ export default class Player {
 
   public ws: WebSocket;
 
-  public create({ name, password }: ICreatePlayer, ws: WebSocket) {
+  public create(
+    { name, password }: ICreatePlayer,
+    ws: WebSocket,
+    store: { [key: string]: Player }
+  ) {
     this.index = uuidv4();
     this.name = name;
     this.password = password;
 
     this.ws = ws;
+
+    const isNameExist = Object.values(store).find(
+      (player) => player.name === name
+    );
+
+    if (isNameExist) {
+      console.error(`User with name: ${name} is already exist`);
+      this.error = true;
+      this.errorText = "User with name is already exist";
+    }
 
     return this;
   }

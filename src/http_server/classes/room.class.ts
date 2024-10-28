@@ -23,6 +23,15 @@ export default class Room {
   }
 
   public addPlayer(player: Player) {
+    const isPlayerInRoom = this.roomUsers.find(
+      (user) => user.index === player.index
+    );
+
+    if (isPlayerInRoom) {
+      console.error("Player is already in this room");
+      return null;
+    }
+
     this.roomUsers.push({ index: player.index, name: player.name });
     this.players[player.index] = player;
 

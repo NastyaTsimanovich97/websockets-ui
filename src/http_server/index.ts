@@ -65,8 +65,6 @@ wss.on("connection", function connection(ws) {
             data: JSON.stringify(availableRooms),
           })
         );
-
-        // update winner should be send
       }
     }
 
